@@ -8,7 +8,9 @@ import org.apache.calcite.plan.hep.HepPlanner
 import org.apache.calcite.plan.hep.HepProgramBuilder
 import org.apache.calcite.rel.core.Join
 import org.apache.calcite.rel.logical.LogicalAggregate
+import org.apache.calcite.rel.logical.LogicalFilter
 import org.apache.calcite.rel.logical.LogicalProject
+import org.apache.calcite.rel.logical.LogicalTableScan
 import org.apache.calcite.rel.rel2sql.RelToSqlConverter
 import org.apache.calcite.rel.RelNode
 import org.apache.calcite.rel.rules.FilterJoinRule
@@ -146,7 +148,6 @@ object QueryPlan {
     val indexToName = attributes.zip(names).toMap
     //println("indexToName: " + indexToName)
 
-
     // build the hypergraph
     val hg = new Hypergraph(items, conditions, attributes)
 
@@ -193,6 +194,7 @@ object QueryPlan {
           // reroot the tree, such that the root contains all attributes
           val root = nodeContainingAttributes.reroot
           println("new root: " + root + " b: " + root.edges.head.planReference.getRowType)
+          println("TTESTETST: " + root.edges.head.planReference.getInputs.get(0).getTable.getQualifiedName)
 
           // get the aggregate, which are applied at the end on the rerooted root
           val stringAtt = aggAttributes.map{a => indexToName(a.asInstanceOf[RexInputRef])}
@@ -236,6 +238,22 @@ object QueryPlan {
 
           /// for the column Date, we needed \\\"Date\\\" for this scala, but now we want Date again
           val original = args(0).replace("\"Date\"", "Date")
+
+          // GET FEATURES OF THE JOIN TREE
+          // get the tree depth
+          var treeDepth = root.getTreeDepth(root,0)
+          println("depth: " + treeDepth)
+          // get the item lifetimes
+          var containerCounts = root.getContainerCount(hg.getEquivalenceClasses, attributes)
+          println("container counts: " + containerCounts)
+          // get the branching factor
+          var branchingFactors = root.getBranchingFactors(root)
+          println("branching factor: " + branchingFactors)
+          // get the balancedness factor
+          var balancednessFactor = root.getBalancednessFactor(root)
+          println("balancedness factor: " + balancednessFactor)
+
+          println(root.treeToString(0))
 
           // write a json file with the original and the rewritten query
           val jsonOutput = JsonOutput(original, finalList, "", executionTime)
@@ -461,9 +479,75 @@ object QueryPlan {
       }
     }
 
+    // get the join tree's depth
+    def getTreeDepth(root: HTNode, depth: Int): Int = {
+      if (root.children.isEmpty) {
+        depth
+      } else {
+        root.children.map(c => getTreeDepth(c, depth + 1)).max
+      }
+    }
+
+    // get a list of the item lifetimes of all attributes in the join tree
+    def getContainerCount(equivalenceClasses: Set[Set[RexNode]], attributes: Seq[RexNode]): List[Int] = {
+      // number of the items, which occure several times, are those being joined on
+      // how often they appear can be retrived of the size of their equivalence class
+      var containerCount = equivalenceClasses.map(_.size).toList
+      // the number of attributes only occuring once, are the number of all attribute minus
+        // the attributes occuring more often
+      val occuringOnce = attributes.size - containerCount.sum
+      val occuringOnceList = List.fill(occuringOnce)(1)
+      containerCount = occuringOnceList ::: containerCount
+      containerCount.sorted
+    }
+
+    // get the branching factors of the join tree
+    def getBranchingFactors(root: HTNode): List[Int] = {
+      if (root.children.isEmpty) {
+        List.empty[Int]
+      } else {
+        root.children.flatMap(c => getBranchingFactors(c)).toList ::: List(root.children.size)
+      }
+    }
+
+    // get the balancedness factor of the join tree
+    def getBalancednessFactor(root: HTNode): (Int, List[Int]) = {
+      if (root.children.isEmpty){
+        println("no kids")
+        return (1, List.empty[Int])
+      } else if (root.children.size == 1){
+        println("1 kid")
+        getBalancednessFactor(root.children.head)
+        return (0, List.empty[Int])
+      } else {
+        println("more")
+        root.children.map(c => println(getBalancednessFactor(c)))
+        val childrenResults: List[(Int, List[Int])] = root.children.toList.map(c => getBalancednessFactor(c))
+        val firstElements: List[Int] = childrenResults.map(_._1)
+        val secondElements: List[List[Int]] = childrenResults.map(_._2)
+        val combinedSecondElements: List[Int] = secondElements.flatten
+        println(childrenResults + "   " + firstElements + "   " + combinedSecondElements)
+        return (0, List.empty[Int])
+      }
+    }
+
     def copy(newEdges: Set[HGEdge] = edges, newChildren: Set[HTNode] = children,
              newParent: HTNode = parent): HTNode =
       new HTNode(newEdges, newChildren, newParent)
+
+    // define a function to be able to print the join tree
+    def treeToString(level: Int = 0): String = {
+      s"""${"-- ".repeat(level)}TreeNode(${edges})""" +
+        s"""[${edges.map {
+          case e if e.planReference.isInstanceOf[LogicalTableScan] =>
+            e.planReference.getTable.getQualifiedName
+          case e if e.planReference.isInstanceOf[LogicalFilter] =>
+            e.planReference.getInputs.get(0).getTable.getQualifiedName
+        }}] [[parent: ${parent != null}]]
+           |${children.map(c => c.treeToString(level + 1)).mkString("\n")}""".stripMargin
+    }
+
+    //override def toString: String = toString(0)
   }
 
   // define a hypergraph class
@@ -531,6 +615,7 @@ object QueryPlan {
       //println("hyperedge: " + hyperedge)
       tableIndex += 1
       attIndex += projectAttributes.size
+      println("he: " + hyperedge + hyperedge.planReference.getTable)
       edges.add(hyperedge)
     }
     println("hyperedges: " + edges)
@@ -550,6 +635,9 @@ object QueryPlan {
       }
       false
     }
+
+    // get the equivalence classes
+    def getEquivalenceClasses: Set[Set[RexNode]] = equivalenceClasses
 
     // check if the query is acyclic (<=> having a join tree)
     def isAcyclic: Boolean = {
