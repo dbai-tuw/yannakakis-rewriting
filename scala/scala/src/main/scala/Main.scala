@@ -194,7 +194,6 @@ object QueryPlan {
           // reroot the tree, such that the root contains all attributes
           val root = nodeContainingAttributes.reroot
           println("new root: " + root + " b: " + root.edges.head.planReference.getRowType)
-          println("TTESTETST: " + root.edges.head.planReference.getInputs.get(0).getTable.getQualifiedName)
 
           // get the aggregate, which are applied at the end on the rerooted root
           val stringAtt = aggAttributes.map{a => indexToName(a.asInstanceOf[RexInputRef])}
@@ -250,8 +249,9 @@ object QueryPlan {
           var branchingFactors = root.getBranchingFactors(root)
           println("branching factor: " + branchingFactors)
           // get the balancedness factor
-          var balancednessFactor = root.getBalancednessFactor(root)
-          println("balancedness factor: " + balancednessFactor)
+          var balancednessFactors = root.getBalancednessFactors(root)
+          var balancednessFactor = balancednessFactors._2.sum / balancednessFactors._2.length
+          println("balancedness factor: " + balancednessFactors + "  " + balancednessFactor)
 
           println(root.treeToString(0))
 
@@ -511,23 +511,20 @@ object QueryPlan {
     }
 
     // get the balancedness factor of the join tree
-    def getBalancednessFactor(root: HTNode): (Int, List[Int]) = {
+    def getBalancednessFactors(root: HTNode): (Int, List[Double]) = {
       if (root.children.isEmpty){
-        println("no kids")
-        return (1, List.empty[Int])
+        return (0, List.empty[Double])
       } else if (root.children.size == 1){
-        println("1 kid")
-        getBalancednessFactor(root.children.head)
-        return (0, List.empty[Int])
+        val balanceOneChild = getBalancednessFactors(root.children.head)
+        return (balanceOneChild._1, balanceOneChild._2)
       } else {
-        println("more")
-        root.children.map(c => println(getBalancednessFactor(c)))
-        val childrenResults: List[(Int, List[Int])] = root.children.toList.map(c => getBalancednessFactor(c))
-        val firstElements: List[Int] = childrenResults.map(_._1)
-        val secondElements: List[List[Int]] = childrenResults.map(_._2)
-        val combinedSecondElements: List[Int] = secondElements.flatten
-        println(childrenResults + "   " + firstElements + "   " + combinedSecondElements)
-        return (0, List.empty[Int])
+        val childrenResults = root.children.toList.map(c => getBalancednessFactors(c))
+        val firstElements = childrenResults.map(_._1).map(_ + 1)
+        val secondElements = childrenResults.map(_._2)
+        val combinedSecondElements = secondElements.flatten
+        val elementsCount = firstElements.sum
+        val balancedness = firstElements.min.toDouble / firstElements.max
+        return (elementsCount, combinedSecondElements ::: List(balancedness))
       }
     }
 
