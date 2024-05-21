@@ -1,0 +1,1 @@
+bench,query,#relations,#conditions,#filters,#joins,total cost,min(table rows),max(table rows),mean(table rows),q25(table rows),median(table rows),q75(table rows),min(join rows),max(join rows),mean(join rows),q25(join rows),median(join rows),q75(join rows),list table rows,list join rows,text
