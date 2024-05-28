@@ -24,11 +24,13 @@ import org.apache.calcite.tools.RelBuilder
 import org.apache.calcite.tools.RelBuilderFactory
 
 import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 import scala.jdk.CollectionConverters._
 import scala.collection.mutable.HashMap
 
 import upickle.default._
 import java.nio.file.{Files, Paths}
+import java.io.PrintWriter
 
 //import java.net.URL
 //import org.apache.calcite.sql.dialect.PostgresqlSqlDialect
@@ -247,16 +249,46 @@ object QueryPlan {
           println("container counts: " + containerCounts)
           // get the branching factor
           var branchingFactors = root.getBranchingFactors(root)
-          println("branching factor: " + branchingFactors)
+          println("branching factors: " + branchingFactors)
           // get the balancedness factor
           var balancednessFactors = root.getBalancednessFactors(root)
           var balancednessFactor = balancednessFactors._2.sum / balancednessFactors._2.length
           println("balancedness factor: " + balancednessFactors + "  " + balancednessFactor)
+          // save all features in one list
+          var features = List(treeDepth, containerCounts, branchingFactors, balancednessFactor).toString
 
+          // write a txt file with a visulization of the join tree
           println(root.treeToString(0))
+          val filePathJoinTree = "/home/dani/masterarbeit/benchmark_data/benchmark/rewritten/" +
+            args(1) + "_" + args(2) + "_jointree.txt"
+          val writer = new PrintWriter(filePathJoinTree)
+          writer.println(root.treeToString(0))
+          writer.close()
+
+          // GET THE HYPERGRAPH REPRESENTATION
+          var edgeStart = 0
+          val edgeResult = ListBuffer[List[String]]()
+          for (i <- items) {
+            val edgeCount = i.getRowType().getFieldCount()
+            var edgeAtt = attributes.slice(edgeStart,edgeStart + edgeCount)
+            val edgeKeys = edgeAtt.map{ e =>
+              val keyString = root.edges.head.attributeToVertex.getOrElse(e, e).toString.tail
+              keyString
+            }
+            edgeResult += edgeKeys.toList
+            edgeStart = edgeStart + edgeCount
+          }
+          println("hypergraph representation: " + edgeStart + " " + edgeResult.toString)
+          // write a txt file with the edges and the number of vertices of the hypergraph
+          val filePathHypergraph = "/home/dani/masterarbeit/benchmark_data/benchmark/rewritten/" +
+            args(1) + "_" + args(2) + "_hypergraph.txt"
+          val writer1 = new PrintWriter(filePathHypergraph)
+          writer1.println(edgeStart + " " + edgeResult.toString)
+          writer1.close()
+
 
           // write a json file with the original and the rewritten query
-          val jsonOutput = JsonOutput(original, finalList, "", executionTime)
+          val jsonOutput = JsonOutput(original, finalList, features, executionTime)
           val json: String = write(jsonOutput)
           println(json)
           val filePath = "/home/dani/masterarbeit/benchmark_data/benchmark/rewritten/" +
@@ -506,7 +538,11 @@ object QueryPlan {
       if (root.children.isEmpty) {
         List.empty[Int]
       } else {
-        root.children.flatMap(c => getBranchingFactors(c)).toList ::: List(root.children.size)
+        var sizes = List.empty[Int]
+        for (child <- root.children) {
+          sizes = sizes ++ getBranchingFactors(child)
+        }
+        sizes ::: List(root.children.size)
       }
     }
 
@@ -612,7 +648,7 @@ object QueryPlan {
       //println("hyperedge: " + hyperedge)
       tableIndex += 1
       attIndex += projectAttributes.size
-      println("he: " + hyperedge + hyperedge.planReference.getTable)
+      //println("he: " + hyperedge + hyperedge.planReference.getTable)
       edges.add(hyperedge)
     }
     println("hyperedges: " + edges)
