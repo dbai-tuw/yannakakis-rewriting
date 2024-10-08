@@ -10,8 +10,9 @@ In `benchmark_data` the code for loading the benchmarks and queries, as well as 
 6. decision_program_augment_{DBMS}.ipynb -> ML models using the times to get the decision program
 
 
-NEU
-7. run_queries_Infos -> stage infos
+NEU   
+run_queries_Infos -> stage infos
+features_Infos -> outputs
 
 
 
