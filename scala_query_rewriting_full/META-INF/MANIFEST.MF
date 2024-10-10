@@ -1,1 +1,10 @@
+Manifest-Version: 1.0
+Specification-Title: scala
+Specification-Version: 0.1.0-SNAPSHOT
+Specification-Vendor: scala
+Implementation-Title: scala
+Implementation-Version: 0.1.0-SNAPSHOT
+Implementation-Vendor: scala
+Implementation-Vendor-Id: scala
+Main-Class: QueryPlan
 
