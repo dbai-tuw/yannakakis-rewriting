@@ -1,0 +1,45 @@
+{
+  "version": "1.0",
+  "defaultSchema": "MYTEST",
+  "schemas": [
+    {
+      "type": "jdbc",
+      "name": "MYTEST",
+      "jdbcUser": "postgres",
+      "jdbcPassword": "postgres",
+      "jdbcUrl": "jdbc:postgresql://127.0.0.1/multidb"
+    },
+    {
+      "name": "STATS",
+      "type": "custom",
+      "factory": "org.apache.calcite.adapter.csv.CsvSchemaFactory",
+      "operand": {
+        "directory": "/home/dani/masterarbeit/benchmark_data/benchmark/stats/datasets"
+      }
+    },
+    {
+      "name": "SNAP",
+      "type": "custom",
+      "factory": "org.apache.calcite.adapter.csv.CsvSchemaFactory",
+      "operand": {
+        "directory": "/home/dani/masterarbeit/benchmark_data/benchmark/snap/datasets"
+      }
+    },
+    {
+      "name": "JOB",
+      "type": "custom",
+      "factory": "org.apache.calcite.adapter.csv.CsvSchemaFactory",
+      "operand": {
+        "directory": "/home/dani/masterarbeit/benchmark_data/benchmark/job/datasets"
+      }
+    },
+    {
+      "name": "LSQB",
+      "type": "custom",
+      "factory": "org.apache.calcite.adapter.csv.CsvSchemaFactory",
+      "operand": {
+        "directory": "/home/dani/masterarbeit/benchmark_data/benchmark/lsqb/data/datasets_1"
+      }
+    }
+  ]
+}
