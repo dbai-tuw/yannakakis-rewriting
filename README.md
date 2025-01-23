@@ -19,11 +19,20 @@ In `benchmark_data`, run `(sudo) docker-compose up` to start the environment.
 ## Running the benchmarks and training the models
 
 ### 0MA queries
-1. data_augmentation.ipynb -> get the augmented data -> scala_commands_augment_filter_agg.txt
-2. These commands into the Scala programm, get the rewritten queries -> rewritten/{benchmark}_{number}_output.json + rewritten/{benchmark}_{number}_drop.json + rewritten/{benchmark}_{number}_jointree.json (rewritten folder not complete...would be 8800 files)
-3. run_queries_calcite_scala_augment_{DBMS}.ipynb -> running queries in both versions for one DBMS -> results/{DBMS}_scala_comparison_TO_augment.csv
-4. features_{DBMS}.ipynb -> get all features in a dataframe together with the times -> results/features_times_{DBMS}.csv (also featuresDatabase_{DBMS}.csv, featuresScala_{DBMS}.csv, featuresHypergraph_{DBMS}.csv)
-5. decision_program_augment_{DBMS}.ipynb -> ML models using the times to get the decision program
+1. **Generate the augmented queries** 
+   * Run `data_augmentation.ipynb`
+   * Output: `scala_commands_augment_filter_agg.txt`
+2. **Rewrite the queries**
+   * Run the commands using the rewriting jar
+   * Output: `rewritten/{benchmark}_{number}_output.json + rewritten/{benchmark}_{number}_drop.json + rewritten/{benchmark}_{number}_jointree.json`
+3. **Run the queries**
+   * Run `run_queries_calcite_scala_augment_{DBMS}.ipynb`
+   * Output: `results/{DBMS}_scala_comparison_TO_augment.csv`
+4. **Extract features**
+   * Run `features_{DBMS}.ipynb`
+   * Output: `results/features_times_{DBMS}.csv` (also featuresDatabase_{DBMS}.csv, featuresScala_{DBMS}.csv, featuresHypergraph_{DBMS}.csv)
+5. **Train ML models**
+   * `decision_program_augment_{DBMS}.ipynb`
 
 ### Enumeration queries and combination of 0MA+enum
 1. queries_full_enumeration.ipynb -> get the (augmented) enumeration queries -> scala_commands_augment_full_enumeration.txt
