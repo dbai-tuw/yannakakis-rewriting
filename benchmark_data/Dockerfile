@@ -9,4 +9,4 @@ EXPOSE 8888
 EXPOSE 4040
 EXPOSE 4041-4050
 
-CMD ["jupyter", "notebook", "--ip", "0.0.0.0", "--allow-root", "--NotebookApp.token=my_secret_token2"]
+CMD ["jupyter", "notebook", "--ip", "0.0.0.0", "--allow-root", "--NotebookApp.token=token"]
