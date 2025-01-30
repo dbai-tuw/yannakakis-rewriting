@@ -16,7 +16,7 @@ In `benchmark_data`, run `(sudo) docker-compose up` to start the environment.
 
 `loading_benchmark_data.ipynb` provides further instructions on how to load the data into PostgreSQL
 
-## Running the benchmarks and training the models
+## Running the benchmarks
 
 ### 0MA queries
 1. **Generate the augmented queries** 
@@ -31,8 +31,6 @@ In `benchmark_data`, run `(sudo) docker-compose up` to start the environment.
 4. **Extract features**
    * Run `features_{DBMS}.ipynb`
    * Output: `results/features_times_{DBMS}.csv` (also featuresDatabase_{DBMS}.csv, featuresScala_{DBMS}.csv, featuresHypergraph_{DBMS}.csv)
-5. **Train ML models**
-   * `decision_program_augment_{DBMS}.ipynb`
 
 ### Enumeration queries and combination of 0MA+enum
 1. **Generated the augmented queries**
@@ -56,3 +54,7 @@ In `benchmark_data`, run `(sudo) docker-compose up` to start the environment.
 6. **Plot stage runtimes**
    * `plot_stages_{DBMS}.ipynb`
    * Output: `plots/{DBMS}_stages_stacked_bar.png, plots/{DBMS}_stages_grouped_bar.png`
+
+## Training the models
+
+See the notebook `train_all_models.ipynb`
