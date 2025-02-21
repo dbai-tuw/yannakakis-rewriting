@@ -1,0 +1,1 @@
+select count(*) from google p1, google p2, google p3, google p4, google p5, google p6, google p7, google p8, google p9 where p1.toNode = p2.fromNode AND p2.toNode = p3.fromNode AND p3.toNode = p4.fromNode AND p4.toNode = p5.fromNode AND p5.toNode = p6.fromNode AND p6.toNode = p7.fromNode AND p7.toNode = p8.fromNode AND p8.toNode = p9.fromNode;
