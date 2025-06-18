@@ -2,19 +2,19 @@
 
 ## Structure of the repository
 
-The Scala source code for generating the rewriting jar can be found in `scala_query_rewriting_full`.
+The Scala source code for generating the rewriting jar can be found in `query-rewriter`.
 
-`benchmark_data` contains the  docker-compose environment. `benchmark_data/benchmark` contains the benchmark code, model training, queries, and benchmark results.
+`benchmarks` contains the  docker-compose environment. `benchmarks/benchmark` contains the benchmark code, model training, queries, and benchmark results.
 
 ## Running the docker-compose environment
 
 We provide a docker-compose environment with two containers: a PostgreSQL instance into which the benchmark data is loaded. and another container for running the jupyter notebooks.
 
-In `benchmark_data`, run `(sudo) docker-compose up` to start the environment.
+In `benchmarks`, run `(sudo) docker-compose up` to start the environment.
 
 ## Loading the data
 
-`loading_benchmark_data.ipynb` provides further instructions on how to load the data into PostgreSQL
+`load_benchmark_data.ipynb` provides further instructions on how to load the data into PostgreSQL
 
 ## Running the benchmarks
 
