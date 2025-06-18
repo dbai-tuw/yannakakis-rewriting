@@ -1,4 +1,4 @@
-# A Yannakakis-rewriting implementation and decision procedure for detecting whether to rewrite or not
+# Yannakakis-rewriting implementation and decision procedure for rewriting only when an improvement can be expected
 
 ## Structure of the repository
 
